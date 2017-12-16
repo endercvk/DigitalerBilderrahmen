@@ -1,5 +1,7 @@
 package haw_landshtu.de.digitalerbilderrahmen;
 
+
+
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -7,12 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.view.View.OnClickListener;
+import android.widget.Toast;
 
 import java.util.ArrayList;
-
-/**
- * Created by x403f on 23.11.2017.
- */
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     private ArrayList<CreateList> galleryList;
@@ -31,9 +31,17 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(MyAdapter.ViewHolder viewHolder, int i) {
+
         viewHolder.title.setText(galleryList.get(i).getImage_title());
         viewHolder.img.setScaleType(ImageView.ScaleType.CENTER_CROP);
         viewHolder.img.setImageResource((galleryList.get(i).getImage_ID()));
+        //Picasso.with(context).load(galleryList.get(i).getImage_ID()).resize(240, 120).into(viewHolder.img);
+        viewHolder.img.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(context,"Image",Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -51,4 +59,5 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             img = (ImageView) view.findViewById(R.id.img);
         }
     }
+
 }

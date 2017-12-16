@@ -10,6 +10,16 @@ public class CreateList {
 
     private String image_title;
     private Integer image_id;
+   private boolean image_favorite = false;
+
+
+    public boolean getimage_favorite(){
+    return  image_favorite;
+    }
+
+    public void setImage_favorite(Boolean favorite){
+        this.image_favorite= favorite;
+    }
 
     public String getImage_title() {
         return image_title;

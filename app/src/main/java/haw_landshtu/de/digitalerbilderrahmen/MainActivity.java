@@ -101,36 +101,10 @@ public class MainActivity extends AppCompatActivity  {
         switch (item.getItemId()){
             case R.id.mainMenuPlay:
                 Log.d(TAG, "Play was pressed");
-
-                //Schlecht in langer Sicht??
-                setContentView(R.layout.play_layout);
-//             ImageView imageView = (ImageView)findViewById(R.id.img_playlayout);
-//               imageView.setImageResource(R.drawable.img1);
-
-//                File imgFile = new  File("/sdcard/test2.png");
-                String internalpath = Environment.getDataDirectory()+"/WhatsApp/Media/WhatsApp Images/test2.png";
-              //  String testpath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()+"/test2.png";
-               String externalpath = Environment.getExternalStorageDirectory()+"/test2.png";
-
-
-                File imgFile = new  File(externalpath);
-
-
-
-
-                if(imgFile.exists()){
-                    Log.d(TAG, "path exists");
-                    Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-                    //Drawable d = new BitmapDrawable(getResources(), myBitmap);
-                    ImageView myImage = (ImageView) findViewById(R.id.img_playlayout);
-                    myImage.setImageBitmap(myBitmap);
-
-                }
-                else{
-                    Log.d(TAG, "path not exists");
-                }
+                playclicked();
 
                 return true;
+
 
             case R.id.mainMenuQuellen:
                 Log.d(TAG, "Quellen was pressed");
@@ -144,6 +118,34 @@ public class MainActivity extends AppCompatActivity  {
         return super.onOptionsItemSelected(item);
     }
 
+    private void playclicked() {
+
+
+        setContentView(R.layout.play_layout);
+
+//        File imgFile = new  File("/sdcard/test2.png");
+        String internalpath = Environment.getDataDirectory()+"/WhatsApp/Media/WhatsApp Images/test2.png";
+        //  String testpath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()+"/test2.png";
+        String externalpath = Environment.getExternalStorageDirectory()+"/test2.png";
+
+
+        File imgFile = new  File(externalpath);
+
+        if(imgFile.exists()){
+            Log.d(TAG, "path exists");
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            //Drawable d = new BitmapDrawable(getResources(), myBitmap);
+            ImageView myImage = (ImageView) findViewById(R.id.img_playlayout);
+            myImage.setImageBitmap(myBitmap);
+
+        }
+        else{
+            Log.d(TAG, "path not exists");
+        }
+    }
+
+
+
     private ArrayList<CreateList> prepareData(){
 
         ArrayList<CreateList> theimage = new ArrayList<>();
@@ -151,6 +153,7 @@ public class MainActivity extends AppCompatActivity  {
             CreateList createList = new CreateList();
             createList.setImage_title(image_titles[i]);
             createList.setImage_ID(image_ids[i]);
+
             theimage.add(createList);
         }
         return theimage;
@@ -175,6 +178,8 @@ public class MainActivity extends AppCompatActivity  {
 
         }
     }
+
+
 
 
 

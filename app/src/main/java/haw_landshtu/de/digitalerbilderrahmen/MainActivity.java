@@ -1,92 +1,227 @@
 package haw_landshtu.de.digitalerbilderrahmen;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.media.Image;
-import android.os.Environment;
+import android.database.Cursor;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity {
 
 
-    private static final String TAG = "XX MainActivity";
-    private static final int REQ_PERMISSION = 120;
+    private static ViewPager mPager;
+    private static int currentPage = 0;
+    private static int NUM_PAGES = 0;
 
-    private final String image_titles[] = {
-            "Img1",
-            "Img2",
-            "Img3",
-            "Img4",
-            "Img5",
-            "Img6",
-            "Img7",
-            "Img8",
-            "Img9",
-            "Img10",
-            "Img11",
-            "Img12",
-            "Img13",
-    };
 
-    private final Integer image_ids[] = {
-            R.drawable.img1,
-            R.drawable.img2,
-            R.drawable.img3,
-            R.drawable.img4,
-            R.drawable.img5,
-            R.drawable.img6,
-            R.drawable.img7,
-            R.drawable.img8,
-            R.drawable.img9,
-            R.drawable.img10,
-            R.drawable.img11,
-            R.drawable.img12,
-            R.drawable.img13,
-    };
+    LinkedList<ImageObject> images = new LinkedList<>();
+    String TAG = "";
+    int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-        reqPermission();
 
-        
-        RecyclerView recyclerView = (RecyclerView)findViewById(R.id.imagegallery);
-        recyclerView.setHasFixedSize(true);
 
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(),3);
-        recyclerView.setLayoutManager(layoutManager);
 
-        ArrayList<CreateList> createLists = prepareData();
-        MyAdapter adapter = new MyAdapter(getApplicationContext(), createLists);
-        recyclerView.setAdapter(adapter);
+        permissionTMP();
+
+        getFiles();
+        initPager();
+
+
+        uiChanges();
+
 
 
     }
 
+
+
+    private void getFiles(){
+
+
+        ImageView image = new ImageView(MainActivity.this);
+
+        // which image properties are we querying
+        String[] projection = new String[] {
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+                MediaStore.Images.Media.DATE_TAKEN,
+                MediaStore.Images.Media.DATA
+        };
+
+        // WHERE folder = blablabal
+        String selection = "bucket_display_name = 'WhatsApp Images'";
+
+
+        Cursor mCursor = getContentResolver()
+                .query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        projection,
+                        selection,
+                        null,
+                        MediaStore.Images.Media.DATE_ADDED+" DESC");
+
+        mCursor.moveToFirst();
+        while(!mCursor.isAfterLast()) {
+            String imageuri;
+            String bucketname;
+            String imageid;
+            String imagedate;
+
+            int imageidColumn = mCursor.getColumnIndex(MediaStore.Images.Media._ID);
+            int imageuriColumn = mCursor.getColumnIndex(MediaStore.Images.Media.DATA);
+            int bucketColumn = mCursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
+            int imagedateColumn = mCursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
+
+            imageid = mCursor.getString(imageidColumn);
+            imageuri = mCursor.getString(imageuriColumn);
+            bucketname = mCursor.getString(bucketColumn);
+            imagedate = mCursor.getString(imagedateColumn);
+
+            Log.d(TAG,
+                    " XX BucketName = " + bucketname
+                            + " || ImageID = " + imageid
+                            + " || ImageDate = " + imagedate
+                            + " || ImageUri = " + imageuri
+            );
+
+
+            ImageObject imageObject = new ImageObject(imageid,bucketname,imagedate,imageuri);
+
+            images.add(imageObject);
+
+
+
+            mCursor.moveToNext();
+
+        }
+        mCursor.close();
+    }
+
+
+
+    private void permissionTMP(){
+
+        //FIXME handle response
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            SystemClock.sleep(10000);
+
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+
+                // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        } else {
+            // Permission has already been granted
+        }
+    }
+
+
+    protected void initPager(){
+
+        mPager = (ViewPager) findViewById(R.id.pager);
+        mPager.setOffscreenPageLimit(1);
+
+        mPager.setAdapter(new SlideShowAdapter(MainActivity.this,images));
+
+
+
+
+
+
+    }
+
+    protected void playtimer(){
+        // Auto start of viewpager
+        final Handler handler = new Handler();
+        final Runnable Update = new Runnable() {
+            public void run() {
+                if (currentPage == NUM_PAGES) {
+                    currentPage = 0;
+                }
+                mPager.setCurrentItem(currentPage++, true);
+            }
+        };
+        Timer swipeTimer = new Timer();
+        swipeTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+
+
+
+
+
+                handler.post(Update);
+            }
+            // Delay = delay before task is executed
+            // Period = between successive task execution
+        }, 3000, 10000);
+
+
+
+    }
+
+
+
+    private void uiChanges(){
+        //Removes action bar
+        getSupportActionBar().hide();
+
+        //Removes status bar
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+
+        //Keeps screen on
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+
+    //https://developer.android.com/guide/topics/ui/menus.html
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -96,92 +231,28 @@ public class MainActivity extends AppCompatActivity  {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
-        Intent intent;
-        switch (item.getItemId()){
+        // Handle item selection
+        switch (item.getItemId()) {
             case R.id.mainMenuPlay:
-                Log.d(TAG, "Play was pressed");
-                playclicked();
+
+                // FIXME Runs non-stop,
+                    playtimer();
 
                 return true;
 
 
-            case R.id.mainMenuQuellen:
-                Log.d(TAG, "Quellen was pressed");
+            case R.id.mainMenuSettings:
+
+                Toast.makeText(this, "Settings", Toast.LENGTH_LONG).show();
+
                 return true;
-            case R.id.mainMenuOptionen:
-                Log.d(TAG, "Optionen was pressed");
-                return true;
-
-
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void playclicked() {
-
-
-        setContentView(R.layout.play_layout);
-
-//        File imgFile = new  File("/sdcard/test2.png");
-        String internalpath = Environment.getDataDirectory()+"/WhatsApp/Media/WhatsApp Images/test2.png";
-        //  String testpath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()+"/test2.png";
-        String externalpath = Environment.getExternalStorageDirectory()+"/test2.png";
-
-
-        File imgFile = new  File(externalpath);
-
-        if(imgFile.exists()){
-            Log.d(TAG, "path exists");
-            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-            //Drawable d = new BitmapDrawable(getResources(), myBitmap);
-            ImageView myImage = (ImageView) findViewById(R.id.img_playlayout);
-            myImage.setImageBitmap(myBitmap);
-
-        }
-        else{
-            Log.d(TAG, "path not exists");
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
-
-
-
-    private ArrayList<CreateList> prepareData(){
-
-        ArrayList<CreateList> theimage = new ArrayList<>();
-        for(int i = 0; i< image_titles.length; i++){
-            CreateList createList = new CreateList();
-            createList.setImage_title(image_titles[i]);
-            createList.setImage_ID(image_ids[i]);
-
-            theimage.add(createList);
-        }
-        return theimage;
-    }
-
-
-    public void reqPermission(){
-        int reqEx = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (reqEx!= PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},REQ_PERMISSION);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_PERMISSION && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            Toast.makeText(getApplicationContext(),"Permission OK",Toast.LENGTH_LONG).show();
-        }
-        else {
-            Toast.makeText(getApplicationContext(),"Permission NOT OK",Toast.LENGTH_LONG).show();
-
-        }
-    }
-
-
-
-
 
 
 }
+
+
+

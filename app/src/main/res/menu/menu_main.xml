@@ -4,20 +4,16 @@
     <item
         android:id="@+id/mainMenuPlay"
         android:title="Play"
+
         app:showAsAction="always"
         />
 
 
-
-
     <item
-        android:id="@+id/mainMenuQuellen"
-        android:title="Quellen"
-        />
+        android:id="@+id/mainMenuSettings"
 
-    <item
-        android:id="@+id/mainMenuOptionen"
-        android:title="Optionen"
+        android:title="Settings"
+        app:showAsAction="always"
         />
 
 
